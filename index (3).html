@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hoteles, apartamentos turísticos y campings</title>
+<style>
+:root{--bg:#fcfcfb;--text:#0b0b0b;--text2:#52514e;--muted:#898781;--grid:rgba(128,128,128,.2)}
+@media (prefers-color-scheme:dark){:root{--bg:#151515;--text:#f0efec;--text2:#c3c2b7}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.6}
+main{max-width:960px;margin:0 auto;padding:32px 20px 48px}
+h1{font-size:26px;font-weight:500;margin:0 0 6px}
+.lead{color:var(--text2);margin:0 0 24px}
+#grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:28px 32px}
+h2{font-size:15px;font-weight:500;margin:0 0 2px}
+.sub{font-size:12px;color:var(--text2);margin:0 0 6px;line-height:1.3}
+.box{position:relative;width:100%;height:220px}
+.legend{display:flex;flex-direction:column;justify-content:center;gap:10px;font-size:14px;color:var(--text2)}
+.legend span{display:flex;align-items:center;gap:8px}
+.note{font-size:12px;margin-top:6px}
+footer{margin-top:32px;font-size:12px;color:var(--text2)}
+</style>
+</head>
+<body>
+<main>
+<h1>Hoteles, apartamentos turísticos y campings</h1>
+<p class="lead">Comparativa a nivel nacional de los meses 1 a 9: ocupación, viajeros, pernoctaciones, estancia media e índice de precios y rentabilidad.</p>
+<div id="grid"></div>
+<footer>Datos: tablas nacionales facilitadas de hoteles, apartamentos turísticos y campings. La ocupación por plazas de hoteles y campings no se muestra porque en esas tablas figura como cantidad y no como porcentaje.</footer>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+var months=['1','2','3','4','5','6','7','8','9'];
+var S=[
+{n:'Hoteles',c:'#2a78d6',d:[]},
+{n:'Apartamentos turísticos',c:'#eb6834',d:[6,4]},
+{n:'Campings',c:'#1baf7a',d:[2,3]}
+];
+var panels=[
+{t:'Ocupación (%)',s:'Hoteles: por habitaciones. Apartamentos: por plazas. Campings: sin dato en %.',zero:true,max:100,
+ data:[[57.27,64.05,64.35,67.24,71.37,74.42,76.15,80.20,78.17],[33.98,34.41,34.67,36.24,36.11,41.11,52.33,58.53,41.14],null]},
+{t:'Viajeros (millones)',s:'',zero:true,
+ data:[[5.95,6.59,8.27,10.21,12.07,12.19,13.21,14.23,12.26],[0.76,0.84,1.02,1.26,1.54,1.72,2.09,2.25,1.66],[0.23,0.25,0.48,0.91,1.08,1.40,1.87,2.28,1.16]]},
+{t:'Pernoctaciones (millones)',s:'',zero:true,
+ data:[[17.40,18.56,23.61,29.29,36.32,38.62,44.85,48.80,40.16],[4.36,4.34,4.87,5.31,6.19,7.29,10.07,11.30,7.49],[1.50,1.49,2.06,3.55,4.09,5.73,9.48,11.59,4.94]]},
+{t:'Estancia media (noches)',s:'',zero:false,
+ data:[[2.92,2.82,2.85,2.87,3.01,3.17,3.40,3.43,3.28],[5.78,5.19,4.79,4.20,4.01,4.24,4.82,5.03,4.51],[6.41,5.97,4.32,3.91,3.78,4.10,5.07,5.08,4.25]]},
+{t:'Índice de precios y rentabilidad (euros)',s:'',zero:false,
+ data:[[148.38,142.24,147.39,143.82,203.14,182.04,180.35,182.89,172.77],[150.18,158.01,149.91,198.04,190.69,193.30,204.06,201.15,182.85],[190.54,187.02,168.85,161.96,180.57,211.18,226.41,226.94,189.31]]}
+];
+var g=document.getElementById('grid');
+var muted=getComputedStyle(document.documentElement).getPropertyValue('--muted').trim()||'#898781';
+panels.forEach(function(p,i){
+ var w=document.createElement('div');
+ w.innerHTML='<h2>'+p.t+'</h2><p class="sub"'+(p.s?'':' style="display:none"')+'>'+p.s+'</p><div class="box"><canvas id="c'+i+'" role="img" aria-label="'+p.t+' por mes: hoteles, apartamentos turísticos y campings"></canvas></div>';
+ g.appendChild(w);
+});
+var lg=document.createElement('div');
+lg.className='legend';
+lg.innerHTML=S.map(function(s){return '<span><svg width="28" height="8" aria-hidden="true"><line x1="0" y1="4" x2="28" y2="4" stroke="'+s.c+'" stroke-width="2.5" stroke-dasharray="'+s.d.join(' ')+'"/></svg>'+s.n+'</span>';}).join('')+'<span class="note">Eje horizontal: meses 1 a 9. Cada gráfica tiene su propia escala.</span>';
+g.appendChild(lg);
+panels.forEach(function(p,i){
+ var ds=[];
+ S.forEach(function(s,k){
+  if(!p.data[k])return;
+  ds.push({label:s.n,data:p.data[k],borderColor:s.c,backgroundColor:s.c,borderWidth:2,borderDash:s.d,pointRadius:2.5,pointHoverRadius:5,tension:0.25});
+ });
+ new Chart(document.getElementById('c'+i),{type:'line',data:{labels:months,datasets:ds},
+  options:{responsive:true,maintainAspectRatio:false,animation:false,
+   interaction:{mode:'index',intersect:false},
+   plugins:{legend:{display:false}},
+   scales:{x:{grid:{display:false},ticks:{color:muted,font:{size:11}}},
+    y:{beginAtZero:p.zero,max:p.max,grid:{color:'rgba(128,128,128,.2)'},border:{display:false},ticks:{color:muted,font:{size:11}}}}}});
+});
+</script>
+</body>
+</html>
